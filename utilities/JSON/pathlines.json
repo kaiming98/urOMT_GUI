@@ -1,0 +1,13 @@
+{
+    "maskFlag": 1,
+    "flowType": "vel",
+    "nPathlines": 2,
+    "isInterpolated": 1,
+    "distanceFlag": "T",
+    "intensityRangeFlag": 0,
+    "cutoffFlag": "min",
+    "nEulerianSteps": 1,
+    "nTimeInterval": 1,
+    "pathlineJump": 5,
+    "jump": 1
+}

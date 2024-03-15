@@ -1,0 +1,216 @@
+import numpy as np
+import sys
+array = sys.argv[1]
+t_total = sys.argv[2]
+delta_t = sys.argv[3]
+
+from scipy.ndimage import convolve
+
+ 
+
+def affine_diffusion_4d(original_array, t_tot=1, dt=0.1):
+    
+    aff_flag=1
+    timer=1
+    padding='replicate'
+    # Cast to double to avoid rounding
+
+    phi = np.array(original_array, dtype=float)
+
+ 
+
+    if padding == 'zeros':
+
+        phi = np.pad(phi, ((0, 0), (0, 0), (0, 0), (1, 1)), mode='constant')
+
+    elif padding == 'replicate':
+
+        phi = np.pad(phi, ((0, 0), (0, 0), (0, 0), (1, 1)), mode='edge')
+
+    elif padding != 'none':
+
+        raise ValueError("In affine_diffusion_4d: padding option is only limited to none, zeros or replicate.")
+
+ 
+
+    # Set up parameters
+
+    if phi.ndim != 4:
+
+        raise ValueError("Error: takes a 4D array.")
+
+ 
+
+    Nx, Ny, Nz, Nt = phi.shape
+
+ 
+
+    n_t = round(t_tot / dt)
+
+ 
+
+    # Evolve the image
+
+    if timer:
+
+        import time
+
+        start_time = time.time()
+
+ 
+
+    for t in range(n_t):
+
+        # First order derivatives
+
+        I1 = np.zeros_like(phi)
+
+        I2 = np.zeros_like(phi)
+
+        I3 = np.zeros_like(phi)
+
+        I4 = np.zeros_like(phi)
+
+ 
+
+        # Second order derivatives
+
+        I11 = np.zeros_like(phi)
+
+        I22 = np.zeros_like(phi)
+
+        I33 = np.zeros_like(phi)
+
+        I44 = np.zeros_like(phi)
+
+ 
+
+        if aff_flag:
+
+            I12 = np.zeros_like(phi)
+
+            I13 = np.zeros_like(phi)
+
+            I14 = np.zeros_like(phi)
+
+            I23 = np.zeros_like(phi)
+
+            I24 = np.zeros_like(phi)
+
+            I34 = np.zeros_like(phi)
+
+ 
+
+        # Compute derivatives for all voxels
+
+        I1[1:-1, 1:-1, 1:-1, 1:-1] = 0.5 * (phi[2:, 1:-1, 1:-1, 1:-1] - phi[:-2, 1:-1, 1:-1, 1:-1])
+
+        I2[1:-1, 1:-1, 1:-1, 1:-1] = 0.5 * (phi[1:-1, 2:, 1:-1, 1:-1] - phi[1:-1, :-2, 1:-1, 1:-1])
+
+        I3[1:-1, 1:-1, 1:-1, 1:-1] = 0.5 * (phi[1:-1, 1:-1, 2:, 1:-1] - phi[1:-1, 1:-1, :-2, 1:-1])
+
+        I4[1:-1, 1:-1, 1:-1, 1:-1] = 0.5 * (phi[1:-1, 1:-1, 1:-1, 2:] - phi[1:-1, 1:-1, 1:-1, :-2])
+
+ 
+
+        I11[1:-1, 1:-1, 1:-1, 1:-1] = phi[2:, 1:-1, 1:-1, 1:-1] - 2 * phi[1:-1, 1:-1, 1:-1, 1:-1] + phi[:-2, 1:-1, 1:-1, 1:-1]
+
+        I22[1:-1, 1:-1, 1:-1, 1:-1] = phi[1:-1, 2:, 1:-1, 1:-1] - 2 * phi[1:-1, 1:-1, 1:-1, 1:-1] + phi[1:-1, :-2, 1:-1, 1:-1]
+
+        I33[1:-1, 1:-1, 1:-1, 1:-1] = phi[1:-1, 1:-1, 2:, 1:-1] - 2 * phi[1:-1, 1:-1, 1:-1, 1:-1] + phi[1:-1, 1:-1, :-2, 1:-1]
+
+        I44[1:-1, 1:-1, 1:-1, 1:-1] = phi[1:-1, 1:-1, 1:-1, 2:] - 2 * phi[1:-1, 1:-1, 1:-1, 1:-1] + phi[1:-1, 1:-1, 1:-1, :-2]
+
+ 
+
+        if aff_flag:
+
+            I12[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[2:, 2:, 1:-1, 1:-1] + phi[:-2, :-2, 1:-1, 1:-1] - phi[2:, :-2, 1:-1, 1:-1] - phi[:-2, 2:, 1:-1, 1:-1])
+
+            I23[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[1:-1, 2:, 2:, 1:-1] + phi[1:-1, :-2, :-2, 1:-1] - phi[1:-1, 2:, :-2, 1:-1] - phi[1:-1, :-2, 2:, 1:-1])
+
+            I13[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[2:, 1:-1, 2:, 1:-1] + phi[:-2, 1:-1, :-2, 1:-1] - phi[2:, 1:-1, :-2, 1:-1] - phi[:-2, 1:-1, 2:, 1:-1])
+
+            I24[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[1:-1, 2:, 1:-1, 2:] + phi[1:-1, :-2, 1:-1, :-2] - phi[1:-1, 2:, 1:-1, :-2] - phi[1:-1, :-2, 1:-1, 2:])
+
+            I14[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[2:, 1:-1, 1:-1, 2:] + phi[:-2, 1:-1, 1:-1, :-2] - phi[2:, 1:-1, 1:-1, :-2] - phi[:-2, 1:-1, 1:-1, 2:])
+
+            I34[1:-1, 1:-1, 1:-1, 1:-1] = 0.25 * (phi[1:-1, 1:-1, 2:, 2:] + phi[1:-1, 1:-1, :-2, :-2] - phi[1:-1, 1:-1, 2:, :-2] - phi[1:-1, 1:-1, :-2, 2:])
+
+ 
+        if aff_flag:
+        # Compute curvature quantities
+
+            meanCurvNum_part1 = (I1**2 + I2**2 + I3**2 + I4**2) * (I11 + I22 + I33 + I44)
+
+            meanCurvNum_part2 = I1**2 * I11 + I2**2 * I22 + I3**2 * I33 + I4**2 * I44 + 2 * (I1 * I2 * I12 + I1 * I3 * I13 + I1 * I4 * I14 + I3 * I2 * I23 + I4 * I2 * I24 + I3 * I4 * I34)
+
+            meanCurvNum = meanCurvNum_part1 - meanCurvNum_part2
+
+    
+
+            gausCurvNum = -(
+
+                    I1**2 * (-I22 * I34**2 - I33 * I24**2 - I44 * I23**2 + I22 * I33 * I44 + 2 * I23 * I24 * I34) +
+
+                    I2**2 * (-I11 * I34**2 - I33 * I14**2 - I44 * I13**2 + I11 * I33 * I44 + 2 * I13 * I14 * I34) +
+
+                    I3**2 * (-I11 * I24**2 - I22 * I14**2 - I44 * I12**2 + I11 * I22 * I44 + 2 * I12 * I14 * I24) +
+
+                    I4**2 * (-I11 * I23**2 - I22 * I13**2 - I33 * I12**2 + I11 * I22 * I33 + 2 * I12 * I13 * I23) -
+
+                    2 * I1 * I2 * (I12 * (I33 * I44 - I34**2) - I33 * I14 * I24 - I44 * I13 * I23 + I34 * (I13 * I24 + I14 * I23)) -
+
+                    2 * I1 * I3 * (I13 * (I22 * I44 - I24**2) - I22 * I14 * I34 - I44 * I12 * I23 + I24 * (I12 * I34 + I14 * I23)) -
+
+                    2 * I1 * I4 * (I14 * (I22 * I33 - I23**2) - I22 * I13 * I34 - I33 * I12 * I24 + I23 * (I12 * I34 + I13 * I24)) -
+
+                    2 * I2 * I3 * (I23 * (I11 * I44 - I14**2) - I11 * I24 * I34 - I44 * I12 * I13 + I14 * (I12 * I34 + I13 * I24)) -
+
+                    2 * I2 * I4 * (I24 * (I11 * I33 - I13**2) - I11 * I23 * I34 - I33 * I12 * I14 + I13 * (I12 * I34 + I14 * I23)) -
+
+                    2 * I3 * I4 * (I34 * (I11 * I22 - I12**2) - I11 * I23 * I24 - I22 * I13 * I14 + I12 * (I13 * I24 + I14 * I23))
+
+            )
+
+    
+
+            # Update phi according to mean curvature flow
+
+            phi = phi + dt * np.sign(meanCurvNum) * np.maximum(0, gausCurvNum)**(1 / 5)
+
+        else:
+             
+            phi = phi + dt * (I11 + I22 + I33 + I44)
+
+ 
+
+        if timer:
+
+            print(f"Step {t + 1} out of {n_t}.")
+
+ 
+
+    if timer:
+
+        runtime = time.time() - start_time
+
+        print(f"\nEvolution took {runtime} seconds.")
+
+ 
+
+    # Return
+
+    if padding == 'none':
+
+        smoothed_array = phi
+
+    elif padding in ['replicate', 'zeros']:
+
+        smoothed_array = phi[:, :, :, 1:-1]
+
+ 
+
+    return smoothed_array
+
+z = affine_diffusion_4d(array, t_total, delta_t)
