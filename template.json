@@ -1,0 +1,10 @@
+{
+  "addSource": 0,
+  "pathMask": "./utilities/MASK.nii",
+  "pathData": "./utilities/processedVolume.nii",
+  "alpha": 10000,
+  "timeInitial": 11,
+  "timeFinal": 35,
+  "pathOutputFolder": "C:/MATLAB/rOMT_v0.2/urOMT_GUI/output",
+  "isDataPacked": 1
+}

@@ -1,0 +1,4 @@
+C:/Matlab/utilities/output/template_E11_E35_addSource_0/eulerian/template_record_set003_020724
+outdir-long: C:/Matlab/utilities/output/template_E11_E35_addSource_0/eulerian/template_record_set003_020724
+outdir-long: C:/Matlab/utilities/output/template_E11_E35_addSource_0/eulerian/template_record_set003_020724
+outdir-long: 
